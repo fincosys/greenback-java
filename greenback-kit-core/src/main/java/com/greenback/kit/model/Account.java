@@ -101,47 +101,51 @@ public class Account extends GreenbackObject {
     }
 
     // helpers
-    
-//    public String getName() {
-//        return maybe(this.overlayName).orElse(this.defaultName);
-//    }
-//    
-//    public GBSync getPendingSync() {
-//        return maybe(this.syncs)
-//            .map(v -> v.get("pending"))
-//            .orElse(null);
-//    }
-//    
-//    public GBSync getLastSync() {
-//        return maybe(this.syncs)
-//            .map(v -> v.get("last"))
-//            .orElse(null);
-//    }
-//    
-//    public GBSync getOkSync() {
-//        return maybe(this.syncs)
-//            .map(v -> v.get("ok"))
-//            .orElse(null);
-//    }
-//    
-//    public DateTime getOkSyncCreatedAt() {
-//        return maybe(this.getOkSync())
-//            .map(v -> v.getCreatedAt())
-//            .orElse(null);
-//    }
-//    
-//    public DateTime getPendingSyncCreatedAt() {
-//        return maybe(this.getPendingSync())
-//            .map(v -> v.getCreatedAt())
-//            .orElse(null);
-//    }
-//    
-//    public DateTime getLastSyncCreatedAt() {
-//        return maybe(this.getLastSync())
-//            .map(v -> v.getCreatedAt())
-//            .orElse(null);
-//    }
-    
+
+    /**
+     * Display name preferring an overlay name when present.
+     */
+    public String getName() {
+        if (this.overlayName != null && !this.overlayName.isEmpty()) {
+            return this.overlayName;
+        }
+        return this.defaultName;
+    }
+
+    public Sync getPendingSync() {
+        return this.syncNamed("pending");
+    }
+
+    public Sync getLastSync() {
+        return this.syncNamed("last");
+    }
+
+    public Sync getOkSync() {
+        return this.syncNamed("ok");
+    }
+
+    public java.time.Instant getOkSyncCreatedAt() {
+        final Sync sync = this.getOkSync();
+        return sync != null ? sync.getCreatedAt() : null;
+    }
+
+    public java.time.Instant getPendingSyncCreatedAt() {
+        final Sync sync = this.getPendingSync();
+        return sync != null ? sync.getCreatedAt() : null;
+    }
+
+    public java.time.Instant getLastSyncCreatedAt() {
+        final Sync sync = this.getLastSync();
+        return sync != null ? sync.getCreatedAt() : null;
+    }
+
+    private Sync syncNamed(String key) {
+        if (this.syncs == null || key == null) {
+            return null;
+        }
+        return this.syncs.get(key);
+    }
+
     // expandable
 
     public Connect getConnect() {

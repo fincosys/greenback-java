@@ -2,6 +2,7 @@ package com.greenback.kit.client;
 
 import com.greenback.kit.model.AutoExportQuery;
 import com.greenback.kit.model.*;
+import com.greenback.kit.util.Bytes;
 
 import java.io.IOException;
 
@@ -18,6 +19,17 @@ public interface GreenbackClient {
     }
     
     User getUserById(String userId, Iterable<String> expands) throws IOException;
+
+    /**
+     * Convenience for {@code getUserById("me")}.
+     */
+    default User getUserMe() throws IOException {
+        return this.getUserById("me");
+    }
+
+    default User getUserMe(Iterable<String> expands) throws IOException {
+        return this.getUserById("me", expands);
+    }
 
     Entitlements getEntitlements() throws IOException;
 
@@ -38,6 +50,15 @@ public interface GreenbackClient {
     ConnectIntent beginConnectIntent(String connectLabel) throws IOException;
     
     ConnectIntent reconnectAccountIntent(String accountId) throws IOException;
+
+    /**
+     * Resume/inspect a connect intent by token when the deployment supports GET.
+     */
+    default ConnectIntent getConnectIntentByToken(String token) throws IOException {
+        return this.getConnectIntentByToken(token, null);
+    }
+
+    ConnectIntent getConnectIntentByToken(String token, Iterable<String> expands) throws IOException;
     
     ConnectIntent authorizeConnectIntent(
         String token,
@@ -62,16 +83,54 @@ public interface GreenbackClient {
     Account getAccountById(String accountId, Iterable<String> expands) throws IOException;
 
     Account deleteAccountById(String accountId) throws IOException;
+
+    // Syncs
+
+    /**
+     * Trigger a sync for an account. POST /v2/accounts/{accountId}/syncs
+     */
+    default Sync createAccountSync(String accountId) throws IOException {
+        return this.createAccountSync(accountId, null);
+    }
+
+    Sync createAccountSync(String accountId, SyncRequest syncRequest) throws IOException;
+
+    default Sync getSyncById(String syncId) throws IOException {
+        return this.getSyncById(syncId, null);
+    }
+
+    Sync getSyncById(String syncId, Iterable<String> expands) throws IOException;
+
+    /**
+     * Optional list endpoint for deployments that expose GET /v2/syncs.
+     */
+    Paginated<Sync> getSyncs(SyncQuery syncQuery) throws IOException;
+
+    /**
+     * Submit answers for a paused sync (e.g. 2FA). POST /v2/syncs/{syncId}/inputs
+     */
+    Sync createSyncInput(String syncId, SyncInputRequest syncInputRequest) throws IOException;
     
     // Visions
     
     Vision createVision(VisionRequest visionRequest) throws IOException;
+
+    /**
+     * Optional list endpoint for deployments that expose GET /v2/visions.
+     */
+    Paginated<Vision> getVisions(VisionQuery visionQuery) throws IOException;
     
     default Vision getVisionById(String visionId) throws IOException {
         return this.getVisionById(visionId, null);
     }
     
     Vision getVisionById(String visionId, Iterable<String> expands) throws IOException;
+
+    Vision deleteVisionById(String visionId) throws IOException;
+
+    Bytes getVisionAttachment(
+            String visionId,
+            String attachmentId) throws IOException;
 
     // Messages
     
@@ -88,6 +147,12 @@ public interface GreenbackClient {
     }
     
     Message getMessageById(String messageId, Iterable<String> expands) throws IOException;
+
+    Message deleteMessageById(String messageId) throws IOException;
+
+    Bytes getMessageAttachment(
+            String messageId,
+            String attachmentId) throws IOException;
     
     // Transactions
 
@@ -104,6 +169,10 @@ public interface GreenbackClient {
     Paginated<Transaction> getTransactions(TransactionQuery transactionQuery) throws IOException;
     
     Transaction deleteTransactionById(String transactionId) throws IOException;
+
+    Bytes getTransactionAttachment(
+            String transactionId,
+            String attachmentId) throws IOException;
     
     // Exports
     

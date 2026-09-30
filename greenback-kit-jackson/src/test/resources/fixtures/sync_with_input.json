@@ -1,0 +1,25 @@
+{
+  "value": {
+    "id": "0gOvMjW7Xk",
+    "account_id": "exBKAywEad",
+    "triggered_by": "web",
+    "type": "default",
+    "reference_id": "b21466cc-414d-11ea-b148-11c9c04b0867",
+    "message": "Pending",
+    "progress": 0.2,
+    "created_at": "2020-01-27T21:40:54.427Z",
+    "updated_at": "2020-01-27T21:40:54.427Z",
+    "status": "processing",
+    "input": {
+      "title": "Enter verification code",
+      "fields": [
+        {
+          "type": "text",
+          "name": "code",
+          "label": "Code",
+          "required": true
+        }
+      ]
+    }
+  }
+}

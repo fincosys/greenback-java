@@ -10,6 +10,7 @@ public class Sync extends GreenbackObject {
     private Double progress;
     private ProcessingStatus status;
     private GreenbackError error;
+    private Form input;
     private SyncRequest request;
     private SyncSummary summary;
 
@@ -75,6 +76,14 @@ public class Sync extends GreenbackObject {
 
     public void setError(GreenbackError error) {
         this.error = error;
+    }
+
+    public Form getInput() {
+        return input;
+    }
+
+    public void setInput(Form input) {
+        this.input = input;
     }
 
     public SyncSummary getSummary() {

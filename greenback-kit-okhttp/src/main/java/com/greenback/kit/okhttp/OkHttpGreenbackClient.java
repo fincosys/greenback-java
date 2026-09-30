@@ -188,6 +188,25 @@ public class OkHttpGreenbackClient extends AbstractGreenbackClient implements Ba
         
         return this.execute(requestBuilder, this.codec::readVision);
     }
+
+    @Override
+    protected Paginated<Vision> getVisionsByUrl(String url) throws IOException {
+
+        final Request.Builder requestBuilder = new Request.Builder()
+            .url(url);
+
+        return this.execute(requestBuilder, this.codec::readVisions);
+    }
+
+    @Override
+    protected Vision deleteVisionByUrl(String url) throws IOException {
+
+        final Request.Builder requestBuilder = new Request.Builder()
+            .url(url)
+            .delete();
+
+        return this.execute(requestBuilder, this.codec::readVision);
+    }
     
     //
     // Messages
@@ -227,6 +246,16 @@ public class OkHttpGreenbackClient extends AbstractGreenbackClient implements Ba
         final Request.Builder requestBuilder = new Request.Builder()
             .url(url);
         
+        return this.execute(requestBuilder, this.codec::readMessage);
+    }
+
+    @Override
+    protected Message deleteMessageByUrl(String url) throws IOException {
+
+        final Request.Builder requestBuilder = new Request.Builder()
+            .url(url)
+            .delete();
+
         return this.execute(requestBuilder, this.codec::readMessage);
     }
     
@@ -276,6 +305,53 @@ public class OkHttpGreenbackClient extends AbstractGreenbackClient implements Ba
             .url(url);
         
         return this.execute(requestBuilder, this.codec::readTransaction);
+    }
+
+    //
+    // Syncs
+    //
+
+    @Override
+    protected Sync postSyncByUrl(
+            String url,
+            Object request) throws IOException {
+
+        final byte[] body = this.codec.writeBytes(request);
+
+        final RequestBody requestBody = this.jsonRequestBody(body);
+
+        final Request.Builder requestBuilder = new Request.Builder()
+            .url(url)
+            .post(requestBody);
+
+        return this.execute(requestBuilder, this.codec::readSync);
+    }
+
+    @Override
+    protected Sync getSyncByUrl(String url) throws IOException {
+
+        final Request.Builder requestBuilder = new Request.Builder()
+            .url(url);
+
+        return this.execute(requestBuilder, this.codec::readSync);
+    }
+
+    @Override
+    protected Paginated<Sync> getSyncsByUrl(String url) throws IOException {
+
+        final Request.Builder requestBuilder = new Request.Builder()
+            .url(url);
+
+        return this.execute(requestBuilder, this.codec::readSyncs);
+    }
+
+    @Override
+    protected Bytes getBytesByUrl(String url) throws IOException {
+
+        final Request.Builder requestBuilder = new Request.Builder()
+            .url(url);
+
+        return this.executeBytes(requestBuilder);
     }
 
     //
@@ -450,6 +526,37 @@ public class OkHttpGreenbackClient extends AbstractGreenbackClient implements Ba
             .post(requestBody);
 
         return this.execute(requestBuilder, this.codec::readExportRun);
+    }
+
+
+    protected Bytes executeBytes(
+            Request.Builder requestBuilder) throws IOException {
+
+        if (this.getAccessToken() != null) {
+            requestBuilder.addHeader("Authorization", "Bearer " + this.getAccessToken());
+        }
+
+        try (okhttp3.Response response = this.getHttpClient().newCall(requestBuilder.build()).execute()) {
+            final okhttp3.ResponseBody body = response.body();
+            final String contentType = response.header("Content-Type");
+
+            if (!response.isSuccessful()) {
+                if (contentType != null
+                        && contentType.toLowerCase().contains("application/json")
+                        && body != null) {
+                    try (java.io.InputStream input = body.byteStream()) {
+                        this.codec.ensureSuccess(input);
+                    }
+                }
+                throw new IOException("Unable to download content (status " + response.code() + ")");
+            }
+
+            if (body == null) {
+                return Bytes.of(new byte[0]);
+            }
+
+            return Bytes.of(body.bytes());
+        }
     }
 
 }

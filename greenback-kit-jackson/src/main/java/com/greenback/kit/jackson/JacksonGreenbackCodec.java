@@ -145,6 +145,12 @@ public class JacksonGreenbackCodec implements GreenbackCodec {
         }
         return this.objectMapper.writeValueAsBytes(value);
     }
+
+    @Override
+    public void ensureSuccess(InputStream input) throws IOException {
+        final JsonNode rootNode = this.objectMapper.readTree(input);
+        this.verifySuccess(rootNode);
+    }
     
     @Override
     public Paginated<User> readUsers(

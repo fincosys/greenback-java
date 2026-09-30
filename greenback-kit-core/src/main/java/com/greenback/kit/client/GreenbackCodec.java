@@ -13,6 +13,12 @@ public interface GreenbackCodec {
     Map<String,Object> toFlattenedMap(Object value) throws IOException;
     
     byte[] writeBytes(Object value) throws IOException;
+
+    /**
+     * Parses a JSON response envelope and throws {@link com.greenback.kit.model.GreenbackException}
+     * when an error is present. Used for non-entity responses (e.g. binary download failures).
+     */
+    void ensureSuccess(InputStream input) throws IOException;
     
     User readUser(InputStream input) throws IOException;
     

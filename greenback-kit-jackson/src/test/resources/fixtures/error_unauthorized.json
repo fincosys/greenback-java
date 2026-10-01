@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": 10002,
+    "message": "Access token rejected",
+    "category": "unauthorized"
+  }
+}

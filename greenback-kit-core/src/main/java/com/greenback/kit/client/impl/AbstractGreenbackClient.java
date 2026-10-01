@@ -195,6 +195,22 @@ abstract public class AbstractGreenbackClient implements GreenbackClient {
     }
     
     @Override
+    public ConnectIntent getConnectIntentByToken(
+            String token,
+            Iterable<String> expands) throws IOException {
+
+        Objects.requireNonNull(token, "token was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/connect_intents")
+            .rel(token)
+            .queryIfPresent("expands", toExpandQueryParameter(expands))
+            .toString();
+
+        return toValue(() -> this.getConnectIntentByUrl(url));
+    }
+
+    @Override
     public ConnectIntent authorizeConnectIntent(
             String token,
             ConnectIntentAuthorize request) throws IOException {
@@ -322,6 +338,81 @@ abstract public class AbstractGreenbackClient implements GreenbackClient {
             String url) throws IOException;
 
     //
+    // Syncs
+    //
+
+    @Override
+    public Sync createAccountSync(
+            String accountId,
+            SyncRequest syncRequest) throws IOException {
+
+        Objects.requireNonNull(accountId, "accountId was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/accounts")
+            .rel(accountId)
+            .rel("syncs")
+            .toString();
+
+        return toValue(() -> this.postSyncByUrl(url, syncRequest != null ? syncRequest : new SyncRequest()));
+    }
+
+    @Override
+    public Sync getSyncById(
+            String syncId,
+            Iterable<String> expands) throws IOException {
+
+        Objects.requireNonNull(syncId, "syncId was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/syncs")
+            .rel(syncId)
+            .queryIfPresent("expands", toExpandQueryParameter(expands))
+            .toString();
+
+        return toValue(() -> this.getSyncByUrl(url));
+    }
+
+    @Override
+    public Paginated<Sync> getSyncs(
+            SyncQuery syncQuery) throws IOException {
+
+        final String url = this.buildBaseUrl()
+            .path("v2/syncs")
+            .query(this.toQueryMap(syncQuery))
+            .toString();
+
+        return toStreamingPaginated(url, v -> this.getSyncsByUrl(v));
+    }
+
+    @Override
+    public Sync createSyncInput(
+            String syncId,
+            SyncInputRequest syncInputRequest) throws IOException {
+
+        Objects.requireNonNull(syncId, "syncId was null");
+        Objects.requireNonNull(syncInputRequest, "syncInputRequest was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/syncs")
+            .rel(syncId)
+            .rel("inputs")
+            .toString();
+
+        return toValue(() -> this.postSyncByUrl(url, syncInputRequest));
+    }
+
+    abstract protected Sync postSyncByUrl(
+            String url,
+            Object request) throws IOException;
+
+    abstract protected Sync getSyncByUrl(
+            String url) throws IOException;
+
+    abstract protected Paginated<Sync> getSyncsByUrl(
+            String url) throws IOException;
+
+    //
     // Visions
     //
     
@@ -362,6 +453,54 @@ abstract public class AbstractGreenbackClient implements GreenbackClient {
     
     abstract protected Vision getVisionByUrl(
             String url) throws IOException;
+
+    @Override
+    public Paginated<Vision> getVisions(
+            VisionQuery visionQuery) throws IOException {
+
+        final String url = this.buildBaseUrl()
+            .path("v2/visions")
+            .query(this.toQueryMap(visionQuery))
+            .toString();
+
+        return toStreamingPaginated(url, v -> this.getVisionsByUrl(v));
+    }
+
+    abstract protected Paginated<Vision> getVisionsByUrl(
+            String url) throws IOException;
+
+    @Override
+    public Vision deleteVisionById(
+            String visionId) throws IOException {
+
+        Objects.requireNonNull(visionId, "visionId was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/visions")
+            .rel(visionId)
+            .toString();
+
+        return toValue(() -> this.deleteVisionByUrl(url));
+    }
+
+    abstract protected Vision deleteVisionByUrl(
+            String url) throws IOException;
+
+    @Override
+    public Bytes getVisionAttachment(
+            String visionId,
+            String attachmentId) throws IOException {
+
+        Objects.requireNonNull(visionId, "visionId was null");
+        Objects.requireNonNull(attachmentId, "attachmentId was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/visions")
+            .rel(visionId, "attachments", attachmentId)
+            .toString();
+
+        return this.getBytesByUrl(url);
+    }
     
     
     //
@@ -428,6 +567,39 @@ abstract public class AbstractGreenbackClient implements GreenbackClient {
     
     abstract protected Message getMessageByUrl(
             String url) throws IOException;
+
+    @Override
+    public Message deleteMessageById(
+            String messageId) throws IOException {
+
+        Objects.requireNonNull(messageId, "messageId was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/messages")
+            .rel(messageId)
+            .toString();
+
+        return toValue(() -> this.deleteMessageByUrl(url));
+    }
+
+    abstract protected Message deleteMessageByUrl(
+            String url) throws IOException;
+
+    @Override
+    public Bytes getMessageAttachment(
+            String messageId,
+            String attachmentId) throws IOException {
+
+        Objects.requireNonNull(messageId, "messageId was null");
+        Objects.requireNonNull(attachmentId, "attachmentId was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/messages")
+            .rel(messageId, "attachments", attachmentId)
+            .toString();
+
+        return this.getBytesByUrl(url);
+    }
     
     
     //
@@ -516,6 +688,28 @@ abstract public class AbstractGreenbackClient implements GreenbackClient {
     
     abstract protected Transaction deleteTransactionByUrl(
             String url) throws IOException;
+
+    @Override
+    public Bytes getTransactionAttachment(
+            String transactionId,
+            String attachmentId) throws IOException {
+
+        Objects.requireNonNull(transactionId, "transactionId was null");
+        Objects.requireNonNull(attachmentId, "attachmentId was null");
+
+        final String url = this.buildBaseUrl()
+            .path("v2/transactions")
+            .rel(transactionId, "attachments", attachmentId)
+            .toString();
+
+        return this.getBytesByUrl(url);
+    }
+
+    /**
+     * Transport hook for binary attachment downloads.
+     */
+    abstract protected Bytes getBytesByUrl(
+            String url) throws IOException;
     
     @Override
     public TransactionExportIntent getTransactionExportIntent(
@@ -534,7 +728,9 @@ abstract public class AbstractGreenbackClient implements GreenbackClient {
             .queryIfPresent("payment", ofNullable(transactionExportIntentRequest).map(v -> v.getPayment()))
             .queryIfPresent("itemized", ofNullable(transactionExportIntentRequest).map(v -> v.getItemized()))
             .queryIfPresent("verified_by", ofNullable(transactionExportIntentRequest).map(v -> toInstantParameter(v.getVerifiedBy())))
-            .queryIfPresent("expands", toExpandQueryParameter(transactionExportIntentRequest.getExpands()))
+            .queryIfPresent("expands", ofNullable(transactionExportIntentRequest)
+                .map(v -> toExpandQueryParameter(v.getExpands()))
+                .orElse(java.util.Optional.empty()))
             .toString();
         
         return toValue(() -> this.getTransactionExporterByUrl(url));
@@ -674,7 +870,7 @@ abstract public class AbstractGreenbackClient implements GreenbackClient {
             String transformId,
             DeleteMode deleteMode) throws IOException {
 
-        Objects.requireNonNull(transformId, "autoExportId was null");
+        Objects.requireNonNull(transformId, "transformId was null");
 
         final String url = this.buildBaseUrl()
             .path("v2/transforms")
@@ -807,7 +1003,7 @@ abstract public class AbstractGreenbackClient implements GreenbackClient {
     public ExportRun getExportRunById(String exportRunId, Iterable<String> expands) throws IOException {
         Objects.requireNonNull(exportRunId, "exportRunId was null");
 
-        //TODO JB: need to implement this route in lens
+        // GET /v2/export_runs/{id} — confirm availability on target Greenback deployment
         final String url = this.buildBaseUrl()
             .path("v2/export_runs")
             .rel(exportRunId)

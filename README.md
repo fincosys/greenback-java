@@ -51,8 +51,8 @@ The Greenback Kit for Java was designed to be flexible about what dependencies w
 Add this dependency to your project's build file:
 
 ```groovy
-implementation "com.greenback:greenback-kit-jackson:1.0.5"
-implementation "com.greenback:greenback-kit-okhttp:1.0.5"
+implementation "com.greenback:greenback-kit-jackson:1.0.42-SNAPSHOT"
+implementation "com.greenback:greenback-kit-okhttp:1.0.42-SNAPSHOT"
 ```
 
 ### Maven users
@@ -63,12 +63,12 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.greenback</groupId>
   <artifactId>greenback-kit-jackson</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.42-SNAPSHOT</version>
 </dependency>
 <dependency>
   <groupId>com.greenback</groupId>
   <artifactId>greenback-kit-okhttp</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.42-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -139,6 +139,50 @@ while (!message.getStatus().isTerminal()) {
     Thread.sleep(500L);
 }
 ```
+
+
+### Sync (Account)
+
+Trigger and poll an account sync (see also `SyncDemo`):
+
+```java
+Sync sync = client.createAccountSync(accountId, new SyncRequest().setLimit(25));
+
+sync = ProcessingPoller.awaitTerminal(
+    () -> client.getSyncById(sync.getId()),
+    Sync::getStatus,
+    1000L,
+    120);
+
+// If the provider requires 2FA mid-sync:
+if (sync.getInput() != null) {
+    client.createSyncInput(sync.getId(), new SyncInputRequest()
+        .addParameter("code", "123456"));
+}
+
+// Account expands include current sync snapshots:
+Account account = client.getAccountById(accountId, Arrays.asList("connect", "syncs"));
+Sync pending = account.getPendingSync();
+```
+
+### Entity coverage (client)
+
+| Entity | Operations |
+| --- | --- |
+| User | get by id, `getUserMe` |
+| TeamMember | list by team |
+| Entitlements | get |
+| Connect | list, get by label |
+| ConnectIntent | begin, reconnect, get by token, authorize, complete |
+| Account | CRUD + query filters |
+| Sync | create under account, get, list (optional), submit input |
+| Vision | create, get, list/delete (optional), attachment download |
+| Message | create, list, get, delete (optional), attachment download |
+| Transaction | CRUD + attachment download + export intents |
+| TransactionExport | get, delete |
+| Transform | CRUD |
+| AutoExport / ExportRun | CRUD / create+list+get |
+
 
 ## License
 

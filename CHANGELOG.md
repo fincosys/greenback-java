@@ -1,5 +1,17 @@
 # Greenback Kit for Java
 
+## v1.0.42-SNAPSHOT
+
+ - Account sync client: create account sync, get sync, optional list, sync input (2FA)
+ - Sync model `input` Form; Form title/description/expiresAt
+ - AccountQuery filters; Account helpers (name, pending/last/ok sync)
+ - Vision/Message optional list/delete; attachment binary downloads
+ - ConnectIntent get-by-token; User `getUserMe` convenience
+ - ProcessingPoller utility; export-intent null-safe expands
+ - Transform delete null-check message fix
+ - Codec fixtures + unit tests; README entity matrix and Sync example
+
+
 ## v1.0.7 - 2021-01-29
 
  - Support for UserPrefs on User

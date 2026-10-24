@@ -9,3 +9,4 @@
 /greenback-kit-core/target/
 /greenback-kit-jackson/target/
 /greenback-kit-okhttp/target/
+.env
